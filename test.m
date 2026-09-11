@@ -2,7 +2,7 @@
 
 static NSString *logPath;
 
-static void log(NSString *msg) {
+static void jb_log(NSString *msg) {
     NSString *line = [NSString stringWithFormat:@"%@ %@\n", [NSDate date], msg];
     NSLog(@"[probe] %@", msg);
     FILE *f = fopen([logPath UTF8String], "a");
@@ -10,7 +10,7 @@ static void log(NSString *msg) {
 }
 
 static void run_probe() {
-    log(@"=== PROBE START ===");
+    jb_log(@"=== PROBE START ===");
     
     // 1. 探测容器路径
     NSArray *paths = @[
@@ -27,32 +27,32 @@ static void run_probe() {
             NSError *err = nil;
             NSArray *c = [fm contentsOfDirectoryAtPath:p error:&err];
             if (err) {
-                log([NSString stringWithFormat:@"%@ EXISTS but list FAILED: %@", p, err.localizedDescription]);
+                jb_log([NSString stringWithFormat:@"%@ EXISTS but list FAILED: %@", p, err.localizedDescription]);
             } else {
-                log([NSString stringWithFormat:@"%@ EXISTS, items=%lu", p, (unsigned long)c.count]);
+                jb_log([NSString stringWithFormat:@"%@ EXISTS, items=%lu", p, (unsigned long)c.count]);
                 for (int i = 0; i < MIN(5, (int)c.count); i++) {
-                    log([NSString stringWithFormat:@"  - %@", c[i]]);
+                    jb_log([NSString stringWithFormat:@"  - %@", c[i]]);
                 }
             }
         } else {
-            log([NSString stringWithFormat:@"%@ NOT EXISTS", p]);
+            jb_log([NSString stringWithFormat:@"%@ NOT EXISTS", p]);
         }
     }
     
     // 2. 探测 MobileGestalt
     NSString *mg = @"/var/mobile/Library/Preferences/com.apple.MobileGestalt.plist";
     if ([fm fileExistsAtPath:mg]) {
-        log(@"MobileGestalt.plist: EXISTS");
+        jb_log(@"MobileGestalt.plist: EXISTS");
     } else {
-        log(@"MobileGestalt.plist: NOT FOUND");
+        jb_log(@"MobileGestalt.plist: NOT FOUND");
     }
     
     // 3. 探测 PosterBoard
     NSString *pb = @"/var/mobile/Library/PosterBoard";
     if ([fm fileExistsAtPath:pb]) {
-        log(@"PosterBoard: EXISTS");
+        jb_log(@"PosterBoard: EXISTS");
     } else {
-        log(@"PosterBoard: NOT FOUND");
+        jb_log(@"PosterBoard: NOT FOUND");
     }
     
     // 4. 探测自己能读到哪些 App 的 Documents
@@ -61,7 +61,7 @@ static void run_probe() {
         NSError *err = nil;
         NSArray *uuids = [fm contentsOfDirectoryAtPath:appData error:&err];
         if (!err) {
-            log([NSString stringWithFormat:@"total App containers visible: %lu", (unsigned long)uuids.count]);
+            jb_log([NSString stringWithFormat:@"total App containers visible: %lu", (unsigned long)uuids.count]);
             int readable = 0;
             for (NSString *uuid in uuids) {
                 NSString *doc = [appData stringByAppendingPathComponent:[NSString stringWithFormat:@"%@/Documents", uuid]];
@@ -69,11 +69,11 @@ static void run_probe() {
                     readable++;
                 }
             }
-            log([NSString stringWithFormat:@"readable Documents: %d / %lu", readable, (unsigned long)uuids.count]);
+            jb_log([NSString stringWithFormat:@"readable Documents: %d / %lu", readable, (unsigned long)uuids.count]);
         }
     }
     
-    log(@"=== PROBE END ===");
+    jb_log(@"=== PROBE END ===");
 }
 
 __attribute__((constructor))
