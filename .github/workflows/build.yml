@@ -1,0 +1,43 @@
+name: Build iOS Sandbox Test
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Theos
+        uses: waruhachi/theos-action@v2.4.10
+        with:
+          theos-branch: 'master'
+          sdks-branch: 'master'
+
+      - name: Compile dylib
+        run: |
+          mkdir -p obj
+          clang -dynamiclib -fobjc-arc -o obj/test.dylib test.m -framework Foundation
+          
+      - name: Package deb (optional)
+        run: |
+          mkdir -p pkg/DEBIAN pkg/Library/MobileSubstrate/DynamicLibraries
+          cp obj/test.dylib pkg/Library/MobileSubstrate/DynamicLibraries/
+          echo "Package: com.sandbox.test" > pkg/DEBIAN/control
+          echo "Name: iOS Sandbox Test" >> pkg/DEBIAN/control
+          echo "Version: 1.0" >> pkg/DEBIAN/control
+          echo "Architecture: iphoneos-arm64" >> pkg/DEBIAN/control
+          echo "Description: Sandbox lab test" >> pkg/DEBIAN/control
+          dpkg-deb -Zgzip -b pkg test.deb || true
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SandboxTest-Build
+          path: |
+            obj/test.dylib
+            test.deb
